@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #d5c5ae; /* Light beige */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 30px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #312229; /* Dark Brown */
+        }
+
+        .search-bar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+            border: 1px solid #47596f; /* Steel Blue */
+            border-radius: 5px;
+        }
+
+        .course-box, .topic-box {
+            background-color: #47596f; /* Steel Blue */
+            color: white;
+            padding: 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .course-box:hover, .topic-box:hover {
+            background-color: #b18653; /* Golden Brown */
+        }
+
+        .dropdown-content {
+            display: none;
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        .dropdown-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 10px;
+            color: #312229; /* Dark Brown */
+        }
+
+        .resource {
+            padding: 10px;
+            text-decoration: none;
+            display: block;
+            color: #312229; /* Dark Brown */
+        }
+
+        .resource:hover {
+            background-color: #b18653; /* Golden Brown */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Library of Courses</h1>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search courses, topics, or links..." onkeyup="searchContent()">
+    </div>
+
+    <!-- Courses Container -->
+    <div id="coursesContainer"></div>
+</div>
+
+<script>
+    // Library Data Structure
+    const data = {
+        "Course 1": {
+            "Topic 1": ["https://www.example.com/resource1", "https://www.example.com/resource2"],
+            "Topic 2": ["https://www.example.com/resource3"]
+        },
+        "Course 2": {
+            "Topic 1": ["https://www.example.com/resource4"],
+            "Topic 3": ["https://www.example.com/resource5", "https://www.example.com/resource6"]
+        }
+    };
+
+    // Render the Library Content
+    function renderCourses(filteredData = data) {
+        const coursesContainer = document.getElementById('coursesContainer');
+        coursesContainer.innerHTML = ''; // Clear previous content
+
+        Object.entries(filteredData).forEach(([courseName, topics]) => {
+            // Create Course Box
+            const courseDiv = createElement('div', 'course-box', courseName);
+            courseDiv.onclick = () => toggleDropdown(`course-${courseName}`);
+
+            // Topics Container
+            const topicsContainer = createElement('div', 'dropdown-content', '', `course-${courseName}`);
+            
+            // Header for Topics
+            const topicsHeader = createElement('div', 'dropdown-header', 'Topics');
+            topicsContainer.appendChild(topicsHeader);
+
+            Object.entries(topics).forEach(([topicName, links]) => {
+                // Create Topic Box
+                const topicDiv = createElement('div', 'topic-box', topicName);
+                topicDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleDropdown(`topic-${courseName}-${topicName}`);
+                };
+
+                // Links Container
+                const linksContainer = createElement('div', 'dropdown-content', '', `topic-${courseName}-${topicName}`);
+                
+                // Header for Links
+                const linksHeader = createElement('div', 'dropdown-header', 'Links');
+                linksContainer.appendChild(linksHeader);
+
+                links.forEach(link => {
+                    const resourceLink = createElement('a', 'resource', link);
+                    resourceLink.href = link;
+                    resourceLink.target = '_blank';
+                    linksContainer.appendChild(resourceLink);
+                });
+
+                topicDiv.appendChild(linksContainer);
+                topicsContainer.appendChild(topicDiv);
+            });
+
+            courseDiv.appendChild(topicsContainer);
+            coursesContainer.appendChild(courseDiv);
+        });
+    }
+
+    // Helper to Create HTML Elements
+    function createElement(tag, className, text = '', id = '') {
+        const element = document.createElement(tag);
+        element.className = className;
+        if (text) element.textContent = text;
+        if (id) element.id = id;
+        return element;
+    }
+
+    // Toggle Dropdown Visibility
+    function toggleDropdown(id) {
+        const element = document.getElementById(id);
+        element.style.display = element.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Search Functionality
+    function searchContent() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        if (!query) {
+            renderCourses();
+            return;
+        }
+
+        const filteredData = {};
+        Object.entries(data).forEach(([courseName, topics]) => {
+            const filteredTopics = {};
+            let courseMatches = courseName.toLowerCase().includes(query);
+
+            Object.entries(topics).forEach(([topicName, links]) => {
+                const filteredLinks = links.filter(link => link.toLowerCase().includes(query));
+
+                if (topicName.toLowerCase().includes(query) || filteredLinks.length > 0) {
+                    filteredTopics[topicName] = filteredLinks.length > 0 ? filteredLinks : links;
+                }
+            });
+
+            if (courseMatches || Object.keys(filteredTopics).length > 0) {
+                filteredData[courseName] = filteredTopics;
+            }
+        });
+
+        renderCourses(filteredData);
+    }
+
+    // Initial Render
+    renderCourses();
+</script>
+
+</body>
+</html>
